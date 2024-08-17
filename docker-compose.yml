@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  comfyui:
+    container_name: comfyui-nvidia-docker
+    image: krim/comfy-nvidia-docker
+    restart: unless-stopped
+    build:
+      context: .
+      args:
+ #       HTTP_PROXY: "http://10.60.3.254:3128"
+ #       HTTPS_PROXY: "http://10.60.3.254:3128"
+    ports:
+      - "7870:7870"
+    volumes:
+      - automatic1111_data:/data
+      - ./output:/output
+    mem_limit: "128G"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [ gpu ]
+
+volumes:
+  automatic1111_data:
+    external: true
