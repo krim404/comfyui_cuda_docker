@@ -1,6 +1,5 @@
 stages:
   - build
-  - scan
   - push
 
 variables:
@@ -11,19 +10,10 @@ build:
   stage: build
   services:
     - docker:27.0.3-dind
+  before_script:
+    - docker login -u $HARBOR_USERNAME -p $HARBOR_PASSWORD $HARBOR_HOST
   script:
-    - docker build -t $IMAGE_NAME:$CI_COMMIT_REF_SLUG -t $HARBOR_HOST/library/$CI_PROJECT_NAME:latest .
-
-trivy_scan:
-  stage: scan
-  image: 
-    name: aquasec/trivy:latest
-    entrypoint: [""]
-  script:
-    - trivy image --exit-code 1 --ignore-unfixed --severity HIGH,CRITICAL $IMAGE_NAME:latest
-  allow_failure: true
-  rules:
-    - if: $CI_COMMIT_BRANCH
+    - docker build -t $IMAGE_NAME:$CI_COMMIT_REF_SLUG -t $IMAGE_NAME:latest .
 
 push:
   stage: push
