@@ -1,5 +1,6 @@
 stages:
   - build
+  - scan
   - push
 
 variables:
@@ -13,7 +14,18 @@ build:
   before_script:
     - docker login -u $HARBOR_USERNAME -p $HARBOR_PASSWORD $HARBOR_HOST
   script:
-    - docker build -t $IMAGE_NAME:$CI_COMMIT_REF_SLUG -t $IMAGE_NAME:latest .
+    - docker build -t $IMAGE_NAME:$CI_COMMIT_REF_SLUG .
+
+trivy_scan:
+  stage: scan
+  image: 
+    name: aquasec/trivy:latest
+    entrypoint: [""]
+  script:
+    - trivy image --exit-code 1 --ignore-unfixed --severity HIGH,CRITICAL $IMAGE_NAME:$CI_COMMIT_REF_SLUG
+  allow_failure: true
+  rules:
+    - if: $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
 
 push:
   stage: push
@@ -21,6 +33,6 @@ push:
   before_script:
     - docker login -u $HARBOR_USERNAME -p $HARBOR_PASSWORD $HARBOR_HOST
   script:
-    - docker push --all-tags $IMAGE_NAME
+    - docker build -t $IMAGE_NAME:$CI_COMMIT_REF_SLUG -t $IMAGE_NAME:latest --push .
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
